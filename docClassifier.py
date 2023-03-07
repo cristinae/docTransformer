@@ -56,6 +56,7 @@ def readCommandLine():
     # Training
     parser.add_argument("-e", "--epochs", type=int, default=5, help="Number of epochs")
     parser.add_argument("-b", "--batch_size", type=int, default=6, help="Number of documents in a batch. Default: 1")
+    parser.add_argument("--gradient_accumulation_size", type=int, default=1, help="Creating a larger effective batch size by accumulating n batches before updating. Default: 1")
     parser.add_argument("--sentence_batch_size", type=int, default=12, help="Number of sentences per document in a batch. Default: 24.")
     parser.add_argument("--eval_steps", type=int, default=500, help="Number of batches prior to validation. Default: 100")
 
@@ -84,7 +85,7 @@ if __name__ == "__main__":
     args = readCommandLine()
     check_args(args)
     
-    accelerator = Accelerator(dispatch_batches=False)
+    accelerator = Accelerator(dispatch_batches=False, gradient_accumulation_steps=args.gradient_accumulation_size)
     device = accelerator.device
     # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Working on" , device)    

@@ -12,6 +12,8 @@ import utils
 
 
 def trainEpoch(model, tokenizer, data_loader, lossFN, optimizer, device, scheduler, args):
+  '''Function currently not used
+     TODO Accelerate improvements not checked'''
 
   model, optimizer, data_loader, scheduler = accelerator.prepare(model, optimizer, data_loader, scheduler)
   model = model.train()
@@ -243,7 +245,6 @@ def trainingLoop(accelerator, device, args):
     scheduler = network.setScheduler(args, optimizer, dataSize)
     lossFN = network.setLoss(device)
     model, trainDataLoader, valDataLoader, optimizer, scheduler = accelerator.prepare(model, trainDataLoader, valDataLoader, optimizer, scheduler)
-    #model, optimizer, scheduler = accelerator.prepare(model, optimizer, scheduler)
 
     # Training
     steps = 0
@@ -257,37 +258,38 @@ def trainingLoop(accelerator, device, args):
        accelerator.print('-' * 10)
  
        for batch in trainDataLoader:
-           steps += 1
-           if (args.split_documents):
-              # documents contains sentences
-              documents = data.split_batch(batch[0], args)
-           else:
-              # documents contains documents
-              documents = batch[0]
+           with accelerator.accumulate(model):
+              steps += 1
+              if (args.split_documents):
+                 # documents contains sentences
+                 documents = data.split_batch(batch[0], args)
+              else:
+                 # documents contains documents
+                 documents = batch[0]
 
-           trainAccBatch, trainLossBatch = trainBatch(model, accelerator, tokenizer, documents, batch[1], lossFN, optimizer, device, scheduler, args) 
-           trainAcc = trainAcc + trainAccBatch
-           trainLoss = trainLoss + trainLossBatch
-           accelerator.wait_for_everyone()
+              trainAccBatch, trainLossBatch = trainBatch(model, accelerator, tokenizer, documents, batch[1], lossFN, optimizer, device, scheduler, args) 
+              trainAcc = trainAcc + trainAccBatch
+              trainLoss = trainLoss + trainLossBatch
+              accelerator.wait_for_everyone()
 
-           if (steps%args.eval_steps==0):
-              accelerator.print(f'Step {steps}: train loss {trainLoss/args.eval_steps} accuracy {trainAcc/args.eval_steps}')
-              valAcc, valLoss = valModel(model, tokenizer, valDataLoader, lossFN, device, args)
-              accelerator.print(f'              val   loss {valLoss} accuracy {valAcc}')
+              if (steps%args.eval_steps==0):
+                 accelerator.print(f'Step {steps}: train loss {trainLoss/args.eval_steps} accuracy {trainAcc/args.eval_steps}')
+                 valAcc, valLoss = valModel(model, tokenizer, valDataLoader, lossFN, device, args)
+                 accelerator.print(f'              val   loss {valLoss} accuracy {valAcc}')
 
-              if (steps%dataSize!=0):
-                 trainAcc = 0
-                 trainLoss = 0
+                 if (steps%dataSize!=0):
+                    trainAcc = 0
+                    trainLoss = 0
 
-              if valAcc > bestAcc:
-                 model2save = accelerator.unwrap_model(model)
-                 #torch.save(model.state_dict(), args.classification_model)
-                 accelerator.save(model2save.state_dict(), args.classification_model)
-                 bestAcc = valAcc
-                 modelBest = model
+                 if valAcc > bestAcc:
+                    model2save = accelerator.unwrap_model(model)
+                    #torch.save(model.state_dict(), args.classification_model)
+                    accelerator.save(model2save.state_dict(), args.classification_model)
+                    bestAcc = valAcc
+                    modelBest = model
               
        accelerator.print()
-       accelerator.print(f'Epoch {epoch+1}: train loss {trainLoss/(steps-args.eval_steps*epoch)} accuracy {trainAcc/steps-args.eval_steps*epoch}')
+       accelerator.print(f'Epoch {epoch+1}: train loss {trainLoss/(steps-args.eval_steps*epoch)} accuracy {trainAcc/(steps-args.eval_steps*epoch)}')
        valAcc, valLoss = valModel(model, tokenizer, valDataLoader, lossFN, device, args)
        accelerator.print(f'         val   loss {valLoss} accuracy {valAcc}')
        accelerator.print()
@@ -309,8 +311,6 @@ def evaluation(device, args):
     utils.printEvalReport(y_test, y_pred, classNames)
     
 
-#RuntimeError: Error(s) in loading state_dict for DocTransformerClassifier:
-#	size mismatch for outClasses.weight: copying a param with shape torch.Size([2, 768]) from checkpoint, the shape in current model is torch.Size([3, 768]).
 def classification(device, args):
 
     evalSet = data.DocIterableDataset(args.test_dataset)
