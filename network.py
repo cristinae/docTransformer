@@ -11,7 +11,10 @@ class DocTransformerClassifier(nn.Module):
 
   def __init__(self, nClasses, args, device):
     super(DocTransformerClassifier, self).__init__()
-    self.transformer = RobertaModel.from_pretrained(args.pretrained_model, return_dict=False)
+    # add_pooling_layer=False is needed for parallelism
+    # https://github.com/UKPLab/sentence-transformers/issues/1454
+    # https://github.com/UKPLab/sentence-transformers/pull/1215
+    self.transformer = RobertaModel.from_pretrained(args.pretrained_model, add_pooling_layer=False, return_dict=False)
     self.device = device
     self.batch_size = args.batch_size
     self.split_docs = args.split_documents
@@ -46,6 +49,8 @@ class DocTransformerClassifier(nn.Module):
        lineBreak = [0, 203, 2] # Achtung! Hardcoded for Roberta tokeniser (but we don't have the tokeniser at this point)
        last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float32).to(self.device)
        last_hidden_state_average = torch.zeros([self.batch_size, self.transformer.config.hidden_size], dtype=torch.float32).to(self.device)
+       #last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float32)
+       #last_hidden_state_average = torch.zeros([self.batch_size, self.transformer.config.hidden_size], dtype=torch.float32)
        batch = 0
        sentences_in_batch = 0       
        for sentence_ids, last_hidden in zip(input_ids, last_hidden_state):
@@ -56,6 +61,7 @@ class DocTransformerClassifier(nn.Module):
               batch += 1
               sentences_in_batch = 0
               last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float64).to(self.device)
+              #last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float64)
        # This is the equivalent to cls_tanh
        pooled_bymethod = self.tanhPrep(last_hidden_state_average)
     else: 
@@ -114,7 +120,7 @@ def loadTokenizer():
 def setModel(args, device, nClasses):
 
    model = DocTransformerClassifier(nClasses, args, device)
-   model = model.to(device)
+   model = model.to(device)  # adding accelerate
    
    return(model)
 
@@ -135,7 +141,8 @@ def setScheduler(args, optimizer, dataSize):
 
 def setLoss(device):
 
-   lossFN = nn.CrossEntropyLoss().to(device)
+   lossFN = nn.CrossEntropyLoss().to(device) # adding accelerate
+   #lossFN = nn.CrossEntropyLoss()
    return(lossFN)
 
    

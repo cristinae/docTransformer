@@ -18,8 +18,8 @@ class DocIterableDataset(IterableDataset):
         
         columns = line.split('\t')
         label = columns[0]
-        #label = labelToyData(label)
-        label = labelPoliticsData(label)
+        label = labelToyData(label)
+        #label = labelPoliticsData(label)
         
         doc = columns[3]
         return (doc, label)
