@@ -10,8 +10,8 @@ Transformer for classification tasks that operates with document fragments
 * An input data streaming implementation to allow training with large datasets
 * Possibility to build document embeddings before classification both during training and classification
   * Document embedding built as the average of the ```[CLS]``` token of _n_ parts of the document:
-   * the document is divided in _n_ parts with an equal number of characters. No sentence/fragment information is used
-   * the document is divided in _n_ parts with an approximate equal number of sentences. If the *sentence_batch* is larger than _n_, sentences are averaged individually 
+     - the document is divided in _n_ parts with an equal number of characters. No sentence/fragment information is used
+     - the document is divided in _n_ parts with an approximate equal number of sentences. If the *sentence_batch* is larger than _n_, sentences are averaged individually 
 * Several possibilities to be considered as input to the classifier besides the standard ```[CLS]``` token
   * [CLS] + tanh
   * [CLS]
