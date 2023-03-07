@@ -96,7 +96,8 @@ def trainBatch(model, accelerator, tokenizer, documents, targets, lossFN, optimi
 
   #loss.backward()
   accelerator.backward(loss)
-  nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+  #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+  accelerator.clip_grad_norm_(model.parameters(), max_norm=1.0)
   optimizer.step()
   scheduler.step()
   optimizer.zero_grad()
