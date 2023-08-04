@@ -17,11 +17,11 @@ class DocIterableDataset(IterableDataset):
     def line_mapper(self, line):
         
         columns = line.split('\t')
-        label = columns[0]
-        label = labelToyData(label)
-        #label = labelPoliticsData(label)
+        label = columns[2]
+        #label = labelToyData(label)
+        label = labelPoliticsData(label)
         
-        doc = columns[3]
+        doc = columns[5]
         return (doc, label)
 
     def __iter__(self):
@@ -150,7 +150,6 @@ def classNamesPoliticsData():
     return ['Left', 'Right']
     
 def labelPoliticsData(label):
-    #neutral appears in the test, but it is not used
-    d = {'left':0, 'right':1, 'neutral':1}
+    d = {'left':0, 'right':1}
     return d[label]
  

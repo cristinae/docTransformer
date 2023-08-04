@@ -12,10 +12,6 @@ import utils
 
 
 def trainEpoch(model, tokenizer, data_loader, lossFN, optimizer, device, scheduler, args):
-  '''Function currently not used
-     TODO Accelerate improvements not checked'''
-
-  model, optimizer, data_loader, scheduler = accelerator.prepare(model, optimizer, data_loader, scheduler)
   model = model.train()
 #  model.freeze_pretrained() if args.freeze_pretrained else model.unfreeze_pretrained()
 
@@ -36,9 +32,6 @@ def trainEpoch(model, tokenizer, data_loader, lossFN, optimizer, device, schedul
     input_ids = encodings['input_ids'].clone().detach().to(device)          # this contains sentences
     attention_mask =  encodings["attention_mask"].clone().detach().to(device)
     targets = batch[1].to(device)                                           # this contains documents
-    #input_ids = encodings['input_ids'].clone().detach()        # this contains sentences
-    #attention_mask =  encodings["attention_mask"].clone().detach()
-    #targets = batch[1]                                         # this contains documents
 
     #print(input_ids)
     outputs = model(
@@ -53,8 +46,7 @@ def trainEpoch(model, tokenizer, data_loader, lossFN, optimizer, device, schedul
     correct_predictions += torch.sum(preds == targets)
     losses.append(loss.item())
 
-    #loss.backward()
-    accelerator.backward(loss)
+    loss.backward()
     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
     optimizer.step()
     scheduler.step()
@@ -63,21 +55,18 @@ def trainEpoch(model, tokenizer, data_loader, lossFN, optimizer, device, schedul
   return correct_predictions.double()/nExamples/args.batch_size, np.mean(losses)
 
 
-def trainBatch(model, accelerator, tokenizer, documents, targets, lossFN, optimizer, device, scheduler, args):
-
+def trainBatch(model, tokenizer, documents, targets, lossFN, optimizer, device, scheduler, args):
   model = model.train()
 
   losses = []
   correct_predictions = 0
   nExamples = 0
-
+  
   encodings = tokenizer(documents, truncation=args.truncation, padding=args.padding, return_token_type_ids=False, return_tensors='pt')    
   input_ids = encodings['input_ids'].clone().detach().to(device)      # this contains sentences
   attention_mask =  encodings["attention_mask"].clone().detach().to(device)
   targets = targets.to(device)                                        # this contains documents
-#  input_ids = encodings['input_ids'].clone().detach()    # this contains sentences
-#  attention_mask =  encodings["attention_mask"].clone().detach()
-  
+
   outputs = model(
       input_ids=input_ids,
       attention_mask=attention_mask
@@ -94,10 +83,8 @@ def trainBatch(model, accelerator, tokenizer, documents, targets, lossFN, optimi
   correct_predictions += torch.sum(preds == targets)
   losses.append(loss.item())
 
-  #loss.backward()
-  accelerator.backward(loss)
-  #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-  accelerator.clip_grad_norm_(model.parameters(), max_norm=1.0)
+  loss.backward()
+  nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
   optimizer.step()
   scheduler.step()
   optimizer.zero_grad()
@@ -124,9 +111,6 @@ def valModel(model, tokenizer, data_loader, lossFN, device, args):
       input_ids = encodings['input_ids'].clone().detach().to(device)
       attention_mask =  encodings["attention_mask"].clone().detach().to(device)
       targets = batch[1].to(device)
-#      input_ids = encodings['input_ids'].clone().detach()
-#      attention_mask =  encodings["attention_mask"].clone().detach()
-#      targets = batch[1]
 
       outputs = model(
         input_ids=input_ids,
@@ -163,9 +147,6 @@ def getPredictions(model, tokenizer, data_loader, device, args):
       input_ids = encodings['input_ids'].clone().detach().to(device)
       attention_mask =  encodings["attention_mask"].clone().detach().to(device)
       targets = batch[1].to(device)
-#      input_ids = encodings['input_ids'].clone().detach()
-#      attention_mask =  encodings["attention_mask"].clone().detach()
-#      targets = batch[1]
 
       outputs = model(
         input_ids=input_ids,
@@ -202,8 +183,6 @@ def getPredictionsNoTargets(model, tokenizer, data_loader, device, args):
       encodings = tokenizer(documents, truncation=args.truncation, padding=args.padding, return_token_type_ids=False, return_tensors='pt')    
       input_ids = encodings['input_ids'].clone().detach().to(device)
       attention_mask =  encodings["attention_mask"].clone().detach().to(device)
-#      input_ids = encodings['input_ids'].clone().detach()
-#      attention_mask =  encodings["attention_mask"].clone().detach()
 
       outputs = model(
         input_ids=input_ids,
@@ -221,12 +200,14 @@ def getPredictionsNoTargets(model, tokenizer, data_loader, device, args):
   return predictions, prediction_probs
 
 
-def trainingLoop(accelerator, device, args):
+def trainingLoop(device, args):
 
     # Format the data for torch usage with dataloaders    
     # Creating the iterable dataset object
     trainingSet = data.DocIterableDataset(args.train_dataset)
-    trainingSet = data.ShuffleDataset(trainingSet, args.buffer, args.shuffling)
+    # Shuffling has been desactivated because I was loosing <args.buffer> number of total instances for training
+    # Please, shuffle beforehand
+    #trainingSet = data.ShuffleDataset(trainingSet, args.buffer, args.shuffling)
     trainDataLoader = data.DataLoader(trainingSet, batch_size=args.batch_size)
     validationSet = data.DocIterableDataset(args.validation_dataset)
     valDataLoader = data.DataLoader(validationSet, batch_size=args.batch_size)
@@ -236,16 +217,12 @@ def trainingLoop(accelerator, device, args):
     dataSize = count
       
     # Initialise the model
-    classNames = data.classNamesToyData()
-    #classNames = data.classNamesPoliticsData()
-    numClasses = len(classNames)
     tokenizer = network.setTokenizer(args)
     tokenizer.save_pretrained('./model/')  
-    model = network.setModel(args, device, numClasses)
+    model = network.setModel(args, device, args.number_classes)
     optimizer = network.setOptimizer(args, model)
     scheduler = network.setScheduler(args, optimizer, dataSize)
     lossFN = network.setLoss(device)
-    model, trainDataLoader, valDataLoader, optimizer, scheduler = accelerator.prepare(model, trainDataLoader, valDataLoader, optimizer, scheduler)
 
     # Training
     steps = 0
@@ -255,45 +232,45 @@ def trainingLoop(accelerator, device, args):
     modelBest = model
     for epoch in range(args.epochs):
  
-       accelerator.print(f'Epoch {epoch + 1}/{args.epochs}')
-       accelerator.print('-' * 10)
- 
+       print(f'Epoch {epoch + 1}/{args.epochs}')
+       print('-' * 10)
+
+       n_batches = 0
        for batch in trainDataLoader:
-           with accelerator.accumulate(model):
-              steps += 1
-              if (args.split_documents):
-                 # documents contains sentences
-                 documents = data.split_batch(batch[0], args)
-              else:
-                 # documents contains documents
-                 documents = batch[0]
+           n_batches += 1
+           steps += 1
+           if (args.split_documents):
+              # documents contains sentences
+              documents = data.split_batch(batch[0], args)
+           else:
+              # documents contains documents
+              documents = batch[0]
 
-              trainAccBatch, trainLossBatch = trainBatch(model, accelerator, tokenizer, documents, batch[1], lossFN, optimizer, device, scheduler, args) 
-              trainAcc = trainAcc + trainAccBatch
-              trainLoss = trainLoss + trainLossBatch
-              accelerator.wait_for_everyone()
+           trainAccBatch, trainLossBatch = trainBatch(model, tokenizer, documents, batch[1], lossFN, optimizer, device, scheduler, args) 
+           trainAcc = trainAcc + trainAccBatch
+           trainLoss = trainLoss + trainLossBatch
+           
+           if (steps%args.eval_steps==0):
+              print(f'Step {steps}: train loss {trainLoss/args.eval_steps} accuracy {trainAcc/args.eval_steps}')
+              valAcc, valLoss = valModel(model, tokenizer, valDataLoader, lossFN, device, args)
+              print(f'              val   loss {valLoss} accuracy {valAcc}')
 
-              if (steps%args.eval_steps==0):
-                 accelerator.print(f'Step {steps}: train loss {trainLoss/args.eval_steps} accuracy {trainAcc/args.eval_steps}')
-                 valAcc, valLoss = valModel(model, tokenizer, valDataLoader, lossFN, device, args)
-                 accelerator.print(f'              val   loss {valLoss} accuracy {valAcc}')
+              if (steps%dataSize!=0):
+                 trainAcc = 0
+                 trainLoss = 0
 
-                 if (steps%dataSize!=0):
-                    trainAcc = 0
-                    trainLoss = 0
-
-                 if valAcc > bestAcc:
-                    model2save = accelerator.unwrap_model(model)
-                    #torch.save(model.state_dict(), args.classification_model)
-                    accelerator.save(model2save.state_dict(), args.classification_model)
-                    bestAcc = valAcc
-                    modelBest = model
+              if valAcc > bestAcc:
+                 torch.save(model.state_dict(), args.classification_model)
+                 bestAcc = valAcc
+                 modelBest = model
               
-       accelerator.print()
-       accelerator.print(f'Epoch {epoch+1}: train loss {trainLoss/(steps-args.eval_steps*epoch)} accuracy {trainAcc/(steps-args.eval_steps*epoch)}')
+       print()
+       # what's the meaning of the epoch loss?
+       # print(f'Epoch {epoch+1}: train loss {trainLoss/(steps-args.eval_steps*epoch)} accuracy {trainAcc/steps-args.eval_steps*epoch}')
+       # print(f'Epoch {epoch+1}: train loss {trainLoss/n_batches} accuracy {trainAcc/n_batches}')
        valAcc, valLoss = valModel(model, tokenizer, valDataLoader, lossFN, device, args)
-       accelerator.print(f'         val   loss {valLoss} accuracy {valAcc}')
-       accelerator.print()
+       print(f'         val   loss {valLoss} accuracy {valAcc}')
+       print()
  
 
 def evaluation(device, args):
@@ -312,6 +289,8 @@ def evaluation(device, args):
     utils.printEvalReport(y_test, y_pred, classNames)
     
 
+#RuntimeError: Error(s) in loading state_dict for DocTransformerClassifier:
+#	size mismatch for outClasses.weight: copying a param with shape torch.Size([2, 768]) from checkpoint, the shape in current model is torch.Size([3, 768]).
 def classification(device, args):
 
     evalSet = data.DocIterableDataset(args.test_dataset)

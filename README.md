@@ -5,8 +5,7 @@ Transformer for classification tasks that operates with document fragments
 ## Features
 
 * UPCOMING: pert distribution for building document embeddings
-* Multi-node and multi-GPU support using the ```Accelerate``` library
-* Gradient accumulation to train with larger effective batches
+* Gradient accumulation to train with larger effective batches using the ```Accelerate``` library
 * An input data streaming implementation to allow training with large datasets
 * Possibility to build document embeddings before classification both during training and classification
   * Document embedding built as the average of the ```[CLS]``` token of _n_ parts of the document:
@@ -21,10 +20,12 @@ Transformer for classification tasks that operates with document fragments
 
 ## Requirements
 
-* [PyTorch](http://pytorch.org/) version >= 1.9.1
+* [Python](https://www.python.org) version >= 3.9
+* [PyTorch](http://pytorch.org/) version >= 2.0.1
+* [Accelerate](https://github.com/huggingface/accelerate) version >= 0.21.0
 
 ## Example Usage
 
 ### Slurm 
 
-``` srun --ntasks 1 --gpus-per-task 4  accelerate launch --multi_gpu docClassifier.py --gradient_accumulation_size 2```
+``` srun --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --gradient_accumulation_size 2```

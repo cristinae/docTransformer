@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import transformers
-from transformers import get_linear_schedule_with_warmup, RobertaTokenizer, RobertaModel
+from transformers import get_linear_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup, XLMRobertaTokenizer, XLMRobertaModel
 import torch
 from torch import nn, optim
 
@@ -11,10 +11,7 @@ class DocTransformerClassifier(nn.Module):
 
   def __init__(self, nClasses, args, device):
     super(DocTransformerClassifier, self).__init__()
-    # add_pooling_layer=False is needed for parallelism
-    # https://github.com/UKPLab/sentence-transformers/issues/1454
-    # https://github.com/UKPLab/sentence-transformers/pull/1215
-    self.transformer = RobertaModel.from_pretrained(args.pretrained_model, add_pooling_layer=False, return_dict=False)
+    self.transformer = XLMRobertaModel.from_pretrained(args.pretrained_model, return_dict=False)
     self.device = device
     self.batch_size = args.batch_size
     self.split_docs = args.split_documents
@@ -49,8 +46,6 @@ class DocTransformerClassifier(nn.Module):
        lineBreak = [0, 203, 2] # Achtung! Hardcoded for Roberta tokeniser (but we don't have the tokeniser at this point)
        last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float32).to(self.device)
        last_hidden_state_average = torch.zeros([self.batch_size, self.transformer.config.hidden_size], dtype=torch.float32).to(self.device)
-       #last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float32)
-       #last_hidden_state_average = torch.zeros([self.batch_size, self.transformer.config.hidden_size], dtype=torch.float32)
        batch = 0
        sentences_in_batch = 0       
        for sentence_ids, last_hidden in zip(input_ids, last_hidden_state):
@@ -61,7 +56,6 @@ class DocTransformerClassifier(nn.Module):
               batch += 1
               sentences_in_batch = 0
               last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float64).to(self.device)
-              #last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float64)
        # This is the equivalent to cls_tanh
        pooled_bymethod = self.tanhPrep(last_hidden_state_average)
     else: 
@@ -111,16 +105,16 @@ def mean_pool(token_embeds, attention_mask):
         
 def setTokenizer(args):
    
-   return RobertaTokenizer.from_pretrained(args.pretrained_model)
+   return XLMRobertaTokenizer.from_pretrained(args.pretrained_model)
 
 def loadTokenizer():
    
-   return RobertaTokenizer.from_pretrained('./model/')
+   return XLMRobertaTokenizer.from_pretrained('./model/')
 
 def setModel(args, device, nClasses):
 
    model = DocTransformerClassifier(nClasses, args, device)
-   model = model.to(device)  # adding accelerate
+   model = model.to(device)
    
    return(model)
 
@@ -135,14 +129,13 @@ def setScheduler(args, optimizer, dataSize):
 
    totalSteps = dataSize*args.epochs
    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=totalSteps)
-
+   #scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=totalSteps, num_cycles=int(args.epochs/2))
    return(scheduler)
 
 
 def setLoss(device):
 
-   lossFN = nn.CrossEntropyLoss().to(device) # adding accelerate
-   #lossFN = nn.CrossEntropyLoss()
+   lossFN = nn.CrossEntropyLoss().to(device)
    return(lossFN)
 
    
