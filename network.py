@@ -9,7 +9,7 @@ from torch import nn, optim
 class DocTransformerClassifier(nn.Module):
   '''Network definition '''
 
-  def __init__(self, nClasses, args, device):
+  def __init__(self, args, device):
     super(DocTransformerClassifier, self).__init__()
     self.transformer = XLMRobertaModel.from_pretrained(args.pretrained_model, return_dict=False)
     self.device = device
@@ -19,7 +19,7 @@ class DocTransformerClassifier(nn.Module):
     self.dropPre = nn.Dropout(p=args.dropout_prepooling)
     self.densePre =  nn.Linear(self.transformer.config.hidden_size, self.transformer.config.hidden_size)
     self.dropPost = nn.Dropout(p=args.dropout_postpooling)
-    self.outClasses = nn.Linear(self.transformer.config.hidden_size, nClasses)
+    self.outClasses = nn.Linear(self.transformer.config.hidden_size, args.number_classes)
     
     # Fine-tune the model or not while learning the classifier
     if (args.freeze_pretrained):
@@ -111,9 +111,9 @@ def loadTokenizer():
    
    return XLMRobertaTokenizer.from_pretrained('./model/')
 
-def setModel(args, device, nClasses):
+def setModel(args, device):
 
-   model = DocTransformerClassifier(nClasses, args, device)
+   model = DocTransformerClassifier(args, device)
    model = model.to(device)
    
    return(model)
