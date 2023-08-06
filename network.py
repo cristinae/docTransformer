@@ -44,8 +44,10 @@ class DocTransformerClassifier(nn.Module):
     #Split de documents into sentences before the final pooling
     if (self.split_docs):   
        lineBreak = [0, 203, 2] # Achtung! Hardcoded for Roberta tokeniser (but we don't have the tokeniser at this point)
-       last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float32).to(self.device)
-       last_hidden_state_average = torch.zeros([self.batch_size, self.transformer.config.hidden_size], dtype=torch.float32).to(self.device)
+       #last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float32).to(self.device)
+       #last_hidden_state_average = torch.zeros([self.batch_size, self.transformer.config.hidden_size], dtype=torch.float32).to(self.device)
+       last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float32)
+       last_hidden_state_average = torch.zeros([self.batch_size, self.transformer.config.hidden_size], dtype=torch.float32)
        batch = 0
        sentences_in_batch = 0       
        for sentence_ids, last_hidden in zip(input_ids, last_hidden_state):
@@ -55,7 +57,8 @@ class DocTransformerClassifier(nn.Module):
               last_hidden_state_average[batch] = torch.div(last_hidden_batch, sentences_in_batch)
               batch += 1
               sentences_in_batch = 0
-              last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float64).to(self.device)
+              #last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float64).to(self.device)
+              last_hidden_batch = torch.zeros([1, self.transformer.config.hidden_size], dtype=torch.float64)
        # This is the equivalent to cls_tanh
        pooled_bymethod = self.tanhPrep(last_hidden_state_average)
     else: 
@@ -72,7 +75,7 @@ class DocTransformerClassifier(nn.Module):
           pooled_bymethod = self.tanhPrep(pooled_bymethod)
        else:
           pooled_bymethod = pooled_output
-          print("Careful!", self.pooling_method)
+          print("Carefull!", self.pooling_method)
     
     output = self.dropPost(pooled_bymethod)
     return self.outClasses(output)
@@ -87,10 +90,14 @@ class DocTransformerClassifier(nn.Module):
         param[1].requires_grad=False
 
   def unfreeze_pretrained(self):
-    for param in self.transformer.named_parameters():
-        param[1].requires_grad=True
-
-
+    #for param in self.transformer.named_parameters():
+    #    param[1].requires_grad=True
+    # This explicitation is needed in multi-GPU setting, parameters not contributing to the loss mess up things
+    for name, param in self.transformer.named_parameters():
+      if name in ["pooler.dense.weight","pooler.dense.bias"]:
+         param.requires_grad = False
+      else:
+         param.requires_grad = True
 
 def mean_pool(token_embeds, attention_mask):
     '''Mean pooling definition for the non-PAD tokens (copied)'''
@@ -114,7 +121,7 @@ def loadTokenizer():
 def setModel(args, device):
 
    model = DocTransformerClassifier(args, device)
-   model = model.to(device)
+   #model = model.to(device)
    
    return(model)
 
@@ -127,7 +134,7 @@ def setOptimizer(args, model):
    
 def setScheduler(args, optimizer, dataSize):
 
-   totalSteps = dataSize*args.epochs
+   totalSteps = dataSize*args.epochs/args.batch_size
    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=totalSteps)
    #scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=totalSteps, num_cycles=int(args.epochs/2))
    return(scheduler)
@@ -135,7 +142,8 @@ def setScheduler(args, optimizer, dataSize):
 
 def setLoss(device):
 
-   lossFN = nn.CrossEntropyLoss().to(device)
+   #lossFN = nn.CrossEntropyLoss().to(device)
+   lossFN = nn.CrossEntropyLoss()
    return(lossFN)
 
    

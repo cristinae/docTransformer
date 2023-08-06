@@ -81,13 +81,14 @@ def check_args(args):
 if __name__ == "__main__": 
     
     args = readCommandLine()
-    
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
-    random.seed(args.seed)
+
+#    Moved to accelerate
+#    np.random.seed(args.seed)
+#    torch.manual_seed(args.seed)
+#    torch.cuda.manual_seed_all(args.seed)
+#    random.seed(args.seed)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print("Working on" , device)    
+#    print("Working on" , device)    
 
         
     # the trained model will be stored in 'model'
