@@ -5,9 +5,11 @@ from torch import nn, optim
 import torch.nn.functional as F
 import transformers
 import numpy as np
+from datetime import timedelta
 
 from accelerate import Accelerator
 from accelerate.utils import set_seed
+from accelerate.utils import InitProcessGroupKwargs
 
 import data
 import network
@@ -172,7 +174,8 @@ def getPredictionsNoTargets(model, tokenizer, data_loader, device, args):
 
 def trainingLoop(device, args):
 
-    accelerator = Accelerator(gradient_accumulation_steps=args.gradient_accumulation_steps)
+    kwargs = InitProcessGroupKwargs(timeout=timedelta(seconds=4500))
+    accelerator = Accelerator(gradient_accumulation_steps=args.gradient_accumulation_steps,kwargs_handlers=[kwargs])
     if args.seed is not None:
         set_seed(args.seed)
     

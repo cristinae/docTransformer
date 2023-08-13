@@ -5,6 +5,7 @@ Transformer for classification tasks that operates with document fragments
 ## Features
 
 * UPCOMING: pert distribution for building document embeddings
+* Multi-GPU support using the ```Accelerate``` library
 * Gradient accumulation to train with larger effective batches using the ```Accelerate``` library
 * An input data streaming implementation to allow training with large datasets
 * Possibility to build document embeddings before classification both during training and classification
@@ -29,3 +30,5 @@ Transformer for classification tasks that operates with document fragments
 ### Slurm 
 
 ``` srun --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --gradient_accumulation_size 2```
+
+``` srun -p V100-16GB  --ntasks 1 --gpus-per-task 4 accelerate launch --multi_gpu --num_processes 4 --num_machines 1 docClassifier.py -b1 -a2 -o best_model_multi4gpus.bin```
