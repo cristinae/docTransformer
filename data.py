@@ -17,11 +17,14 @@ class DocIterableDataset(IterableDataset):
     def line_mapper(self, line):
         
         columns = line.split('\t')
-        label = columns[2]
-        #label = labelToyData(label)
-        label = labelPoliticsData(label)
-        
-        doc = columns[5]
+        if(len(columns) != 5):
+            print('Format error in datafile')
+            print(columns)
+        label = columns[1]  #2 for politics
+        label = labelVariantsData(label)
+        #label = labelPoliticsData(label)
+          
+        doc = columns[4]  #5 for politics
         return (doc, label)
 
     def __iter__(self):
@@ -140,10 +143,10 @@ def split_batch(docs, args):
 
 
 def classNamesToyData(): 
-    return ['Argentina', 'España', 'México']
+    return ['Chile', 'España', 'México', 'Mix']
     
-def labelToyData(label):
-    d = {'ar':0, 'es':1, 'mx':2}
+def labelVariantsData(label):
+    d = {'cl':0, 'es':1, 'mx':2, 'mix':3}
     return d[label]
  
 def classNamesPoliticsData(): 
