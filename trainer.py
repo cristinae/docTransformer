@@ -11,6 +11,8 @@ from accelerate import Accelerator
 import data
 import network
 import utils
+import shutil
+import os
 
 
 def trainBatch(accelerator, model, tokenizer, documents, targets, lossFN, optimizer, device, scheduler, args):
@@ -205,22 +207,46 @@ def trainingLoop(device, args):
     trainDataLoader = accelerator.prepare_data_loader(trainDataLoader, device_placement=False)
     valDataLoader = accelerator.prepare_data_loader(valDataLoader, device_placement=False)
 
+    startingEpoch = 0
+    overallSteps = 0
+    resumeStep = None
+    # are we resuming from a previous training?
+    if args.resume_from_checkpoint !="False" and args.resume_from_checkpoint != "":
+        accelerator.print(f"Resumed from checkpoint: {args.resume_from_checkpoint}")
+        accelerator.load_state(args.resume_from_checkpoint)
+        path = os.path.basename(args.resume_from_checkpoint)
+        # Extract `step_{i}`
+        training_difference = os.path.splitext(path)[0]
+        resumeStep = int(training_difference.replace("step_", ""))
+        startingEpoch = resumeStep // dataSize
+        resumeStep -= startingEpoch * dataSize
+
+
     # Training
     steps = 0
     bestAcc = 0
     trainAcc = 0
     trainLoss = 0
     modelBest = model
-    for epoch in range(args.epochs):
+    for epoch in range(startingEpoch, args.epochs):
  
        accelerator.print(f'Epoch {epoch + 1}/{args.epochs}')
        accelerator.print('-' * 10)
 
+       if args.resume_from_checkpoint and epoch == startingEpoch and resumeStep is not None:
+          # We need to skip steps until we reach the resumed step
+          activeDataLoader = accelerator.skip_first_batches(trainDataLoader, resumeStep)
+          overallSteps += resumeStep
+       else:
+          # After the first iteration though, we need to go back to the original dataloader
+          activeDataLoader = trainDataLoader
+
        n_batches = 0
-       for batch in trainDataLoader:
+       for batch in activeDataLoader:
          with accelerator.accumulate(model):
            n_batches += 1
            steps += 1
+           overallSteps += 1
            if (args.split_documents):
               # documents contains sentences
               documents = data.split_batch(batch[0], args)
@@ -233,19 +259,33 @@ def trainingLoop(device, args):
            trainAcc = trainAcc + trainAccBatch
            trainLoss = trainLoss + trainLossBatch
            
-           if (steps%args.eval_steps==0):
-              accelerator.print(f'Step {steps}: train loss {trainLoss/args.eval_steps} accuracy {trainAcc/args.eval_steps}')
+           if (overallSteps%args.eval_steps==0):
+              # Save a checkpoint everytime we validate
+              if (args.num_checkpoints>0):
+                  #first we remove the previous checkpoint, the last we do not want to keep
+                  chkToDelete = overallSteps-args.num_checkpoints*args.eval_steps
+                  outputToDelete = args.classification_model_folder+'/step_'+str(chkToDelete)
+                  print(outputToDelete)
+                  print(overallSteps)
+                  if os.path.isdir(outputToDelete):
+                      shutil.rmtree(outputToDelete)
+                  # then we save the model, optimizer, lr_scheduler, and seed states by calling `save_state`
+                  outputCHK = f"step_{overallSteps}"
+                  outputCHK = os.path.join(args.classification_model_folder, outputCHK)
+                  accelerator.save_state(outputCHK)
+              # Validation
+              accelerator.print(f'Step {overallSteps}: train loss {trainLoss/args.eval_steps} accuracy {trainAcc/args.eval_steps}')
               valAcc, valLoss = valModel(model, tokenizer, valDataLoader, lossFN, device, args)
               accelerator.print(f'              val   loss {valLoss} accuracy {valAcc}')
 
-              if (steps%dataSize!=0):
+              if (overallSteps%dataSize!=0):
                  trainAcc = 0
                  trainLoss = 0
 
               if valAcc > bestAcc:
                  model2save = accelerator.unwrap_model(model)
                  #torch.save(model.state_dict(), args.classification_model)
-                 accelerator.save(model2save.state_dict(), args.classification_model)
+                 accelerator.save(model2save.state_dict(), os.path.join(args.classification_model_folder, args.classification_model))
                  bestAcc = valAcc
                  modelBest = model
 
@@ -268,7 +308,7 @@ def evaluation(device, args):
              classNames.add(line.split('\t')[0])
 
     model = network.setModel(args, device)
-    model.load_state_dict(torch.load(args.classification_model, map_location=torch.device(device)))
+    model.load_state_dict(torch.load(os.path.join(args.classification_model_folder, args.classification_model), map_location=torch.device(device)))
     tokenizer = network.loadTokenizer()
     y_pred, y_pred_probs, y_test = getPredictions(model, tokenizer, dataLoader, device, args)
     utils.printEvalReport(y_test, y_pred, classNames)
@@ -282,7 +322,7 @@ def classification(device, args):
     dataLoader = data.DataLoader(evalSet, batch_size=args.batch_size)
     
     model = network.setModel(args, device)
-    model.load_state_dict(torch.load(args.classification_model, map_location=torch.device(device)))
+    model.load_state_dict(torch.load(os.path.join(args.classification_model_folder, args.classification_model), map_location=torch.device(device)))
     tokenizer = network.loadTokenizer()
     y_pred, y_pred_probs = getPredictionsNoTargets(model, tokenizer, dataLoader, device, args)
     utils.printClassifications(y_pred, y_pred_probs,args.test_dataset) 

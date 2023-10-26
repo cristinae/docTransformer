@@ -31,6 +31,8 @@ Transformer for classification tasks that operates with document fragments
 
 ```srun --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --gradient_accumulation_steps 2```
 
+```srun -p A100-80GB -t 3-0 --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --eval_steps 10000 --lr 5e-6 -f modelb2a8sentence16A80 -o modelb2a8sentence16A80seed2.bin -b2 -a8 --sentence_batch_size 16 --split_documents True  --seed 5678``` 
+
 ```srun -p V100-16GB  --ntasks 1 --gpus-per-task 4 accelerate launch --multi_gpu --num_processes 4 --num_machines 1 docClassifier.py -b1 -a2 -o best_model_multi4gpus.bin```
 
 ## Citation

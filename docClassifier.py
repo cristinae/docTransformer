@@ -25,13 +25,17 @@ def readCommandLine():
     parser.add_argument("-c", "--train_dataset", required=False, type=str, default='./data/multivariant3all.train', help="Training dataset for classification")
     parser.add_argument("-v", "--validation_dataset", type=str, default='./data/multivariant3all.dev', help="Validation set")
     parser.add_argument("-t", "--test_dataset", type=str, default='./data/multivariant3all.dev', help="Test set to evaluate or classify")
-    parser.add_argument("-o", "--classification_model", required=False, type=str, default='./model/model.bin', help="Name for the model file")
+    parser.add_argument("-o", "--classification_model", required=False, type=str, default='modelBest.bin', help="Name for the model file. Default: modelBest.bin")
+    parser.add_argument("-f", "--classification_model_folder", required=False, type=str, default='./model/', help="Name for the model folder (it will also contain checkpoints). Default: ./model")
     # Shuffling has been deprecated, please shuffle the training data beforehand
     #parser.add_argument("--buffer", type=int, default=1, help="Documents are not loaded completely into memory but into <buffer> chunks. Default: 100000 documents.")
     #parser.add_argument("--shuffling", type=boolean_string, default=True, help="Suffling within a dataset buffer. Options: True, False. Default: True.")
-    
-    # Task (training by default)
-    parser.add_argument("--task", type=str, default='training', help="Task to perform. Options: training, evaluation, classification. Default: training.")
+    # Checkpointing
+    parser.add_argument("--resume_from_checkpoint", type=str, default='False', help="If the training should continue from a checkpoint folder give the folder name, otherwise False. Default: False")
+    parser.add_argument("--num_checkpoints", type=int, default=1, help="Number of checkpoints to keep. Default: 1")
+
+    #Task (training by default)
+    parser.add_argument("--task", type=str, default='training', help="Task to perform. Options: training, evaluation, classification. Default: training")
     
     # Data processing
     # Tokenisation
@@ -39,15 +43,15 @@ def readCommandLine():
     parser.add_argument("--padding", type=boolean_string, default=True, help="")
     parser.add_argument("--max_length", type=int, default=None, help="")
     
-    parser.add_argument("--split_documents", type=boolean_string, default=False, help="Deal with documents as a set of sentences")
-    parser.add_argument("--sentence_delimiter", type=str, default='<NS>', help="Delimiter used to sepatate fragments in a document")
+    parser.add_argument("--split_documents", type=boolean_string, default=False, help="Deal with documents as a set of fragments. Default: False")
+    parser.add_argument("--sentence_delimiter", type=str, default='<NS>', help="Delimiter used to separate fragments in a document. Default: <NS>")
     parser.add_argument("--split_method", type=str, default='sentence', help="How to split the document. Options: char (exact splitting at char level), sentence (aprox splitting at sentence level). Default: sentence.")    
 
     # Base model
     # spanish model skimai/spanberta-base-cased; german model 
     # xlm-roberta-large
     parser.add_argument("-m", "--pretrained_model", type=str, default='xlm-roberta-large', help="pretrained model (currently only Roberta family implemented)")
-    parser.add_argument("-f", "--freeze_pretrained", type=boolean_string, default=False, help="Freeze weights of the pretrained model. Options: True, False")
+    parser.add_argument("--freeze_pretrained", type=boolean_string, default=False, help="Freeze weights of the pretrained model. Options: True, False")
     
     # Training
     parser.add_argument("-e", "--epochs", type=int, default=2, help="Number of epochs")
