@@ -265,8 +265,6 @@ def trainingLoop(device, args):
                   #first we remove the previous checkpoint, the last we do not want to keep
                   chkToDelete = overallSteps-args.num_checkpoints*args.eval_steps
                   outputToDelete = args.classification_model_folder+'/step_'+str(chkToDelete)
-                  print(outputToDelete)
-                  print(overallSteps)
                   if os.path.isdir(outputToDelete):
                       shutil.rmtree(outputToDelete)
                   # then we save the model, optimizer, lr_scheduler, and seed states by calling `save_state`
@@ -305,13 +303,15 @@ def evaluation(device, args):
     classNames = set()
     with open(args.test_dataset, 'r') as fp:
          for line in fp:
-             classNames.add(line.split('\t')[0])
+             classNames.add(line.split('\t')[1])
 
     model = network.setModel(args, device)
     model.load_state_dict(torch.load(os.path.join(args.classification_model_folder, args.classification_model), map_location=torch.device(device)))
     tokenizer = network.loadTokenizer()
     y_pred, y_pred_probs, y_test = getPredictions(model, tokenizer, dataLoader, device, args)
     utils.printEvalReport(y_test, y_pred, classNames)
+    utils.printConfusionMatrix(y_test, y_pred, list(classNames))
+    utils.plotConfusionMatrix(y_test, y_pred, list(classNames), args.plotConfusionFileName)
     
 
 #RuntimeError: Error(s) in loading state_dict for DocTransformerClassifier:

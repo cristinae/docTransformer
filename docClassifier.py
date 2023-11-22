@@ -24,7 +24,7 @@ def readCommandLine():
     # Input/Output
     parser.add_argument("-c", "--train_dataset", required=False, type=str, default='./data/multivariant3all.train', help="Training dataset for classification")
     parser.add_argument("-v", "--validation_dataset", type=str, default='./data/multivariant3all.dev', help="Validation set")
-    parser.add_argument("-t", "--test_dataset", type=str, default='./data/multivariant3all.dev', help="Test set to evaluate or classify")
+    parser.add_argument("-t", "--test_dataset", type=str, default='./data/multivariant3all.test', help="Test set to evaluate or classify")
     parser.add_argument("-o", "--classification_model", required=False, type=str, default='modelBest.bin', help="Name for the model file. Default: modelBest.bin")
     parser.add_argument("-f", "--classification_model_folder", required=False, type=str, default='./model/', help="Name for the model folder (it will also contain checkpoints). Default: ./model")
     # Shuffling has been deprecated, please shuffle the training data beforehand
@@ -36,6 +36,7 @@ def readCommandLine():
 
     #Task (training by default)
     parser.add_argument("--task", type=str, default='training', help="Task to perform. Options: training, evaluation, classification. Default: training")
+    parser.add_argument("--plotConfusionFileName", type=str, default='confusionTest.png', help="File name for the plot of the confusion matrix when task evaluation is chosen. Default: confusionTest.png")
     
     # Data processing
     # Tokenisation
