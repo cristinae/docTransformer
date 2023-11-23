@@ -8,7 +8,36 @@ import sys, os
 import argparse
 
 import matplotlib.pyplot as plt
+
 import numpy as np
+
+
+plt.rcParams.update({
+ "axes.linewidth":2,
+ "xtick.major.width":2,
+ "xtick.minor.width":2,
+ "ytick.major.width":2,
+ "ytick.minor.width":2,
+ "xtick.major.size":8,
+ "ytick.major.size":8,
+ "xtick.minor.size":6,
+ "ytick.minor.size":6
+})
+plt.rcParams.update({
+  "text.usetex": True,
+  "font.family": "Helvetica",
+  "font.size": 20
+})
+fontTit = {'family': 'sans-serif',
+        'color':  'black',
+        'weight': 'heavy',
+        'size': 22,
+        }
+fontAx = {'family': 'sans-serif',
+        'weight': 'normal',
+        'size': 18,
+        }
+
 
 def get_parser():
     '''
@@ -35,17 +64,23 @@ def get_parser():
 
 
 def createHistogram(counts, INfile):
-    n, bins, patches = plt.hist(x=counts, bins=40, color='#607c8e',
+    plt.figure(figsize=(8,5.5))
+    n, bins, patches = plt.hist(x=counts, bins=40, color='#801515',
                             alpha=0.7, rwidth=0.85)
     plt.grid(axis='y', alpha=0.7)
-    plt.ylabel('Documents')
-    plt.xlabel('Segments (<NS>)')
-    #plt.title('My Very Own Histogram')
+    plt.ylabel('\# Documents')
+    plt.xlabel('Segments ($<$NS$>$)')
+    #plt.xlabel('Words')
+    #plt.title('kk')
     #plt.text(23, 45, r'$\mu=15, b=3$')
     maxfreq = n.max()
     # Set a clean upper y-axis limit.
-    plt.ylim(ymax=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10)
-    plt.xlim(xmin=0, xmax=200)
+    # plt.ylim(ymax=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10)
+    plt.ylim(ymin=0, ymax=452000)
+    plt.xlim(xmin=0, xmax=153)
+    #plt.xlim(xmin=0, xmax=3100)
+    plt.ticklabel_format(axis='y', style='sci', scilimits=(0,1000))
+    plt.tight_layout(pad=0.3)
     plt.savefig(INfile+'.NS.png')
 
 
