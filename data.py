@@ -10,21 +10,31 @@ import numpy as np
 class DocIterableDataset(IterableDataset):
     ''' Iterator on the datafile that extracts text and class'''
 
-    def __init__(self, filename):
+    def __init__(self, filename, task):
 
         self.filename = filename
+        self.task = task
 
     def line_mapper(self, line):
         
         columns = line.split('\t')
-        if(len(columns) != 5):
-            print('Format error in datafile')
-            print(columns)
-        label = columns[1]  #2 for politics
-        label = labelVariantsData(label)
-        #label = labelPoliticsData(label)
-          
-        doc = columns[4]  #5 for politics
+        
+        if(self.task!='classification'):
+           if(len(columns) != 5):
+              print('Format error in datafile')
+              print(columns)
+           label = columns[1]  #2 for politics
+           label = labelVariantsData(label)
+           #label = labelPoliticsData(label)
+           doc = columns[4]  #5 for politics
+        else:
+           if(len(columns) != 3):
+              print('Format error in datafile')
+              print(columns)
+           #print(columns)
+           label = 4
+           doc = columns[2]
+
         return (doc, label)
 
     def __iter__(self):
@@ -148,7 +158,11 @@ def classNamesToyData():
 def labelVariantsData(label):
     d = {'cl':0, 'es':1, 'mx':2, 'mix':3}
     return d[label]
- 
+
+def getTextLabel(label):
+    d = {0:'cl', 1:'es', 2:'mx', 3:'mix'}
+    return d[label]
+
 def classNamesPoliticsData(): 
     return ['Left', 'Right']
     

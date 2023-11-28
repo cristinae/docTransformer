@@ -165,7 +165,7 @@ def getPredictionsNoTargets(model, tokenizer, data_loader, device, args):
 
       predictions.extend(preds)
       prediction_probs.extend(probs)
-
+      
   predictions = torch.stack(predictions).cpu()
   prediction_probs = torch.stack(prediction_probs).cpu()
   return predictions, prediction_probs
@@ -177,7 +177,7 @@ def trainingLoop(device, args):
 
     # Format the data for torch usage with dataloaders    
     # Creating the iterable dataset object
-    trainingSet = data.DocIterableDataset(args.train_dataset)
+    trainingSet = data.DocIterableDataset(args.train_dataset, args.task)
     # Shuffling shas been deprecated
     #trainingSet = data.ShuffleDataset(trainingSet, args.buffer, args.shuffling)
     trainDataLoader = data.DataLoader(trainingSet, batch_size=args.batch_size)
@@ -187,7 +187,7 @@ def trainingLoop(device, args):
     #    I = I+1
     #    break
     #accelerator.print(I)    
-    validationSet = data.DocIterableDataset(args.validation_dataset)
+    validationSet = data.DocIterableDataset(args.validation_dataset, args.task)
     valDataLoader = data.DataLoader(validationSet, batch_size=args.batch_size)
     with open(args.train_dataset, 'r') as fp:
          for count, line in enumerate(fp):
@@ -217,6 +217,7 @@ def trainingLoop(device, args):
         path = os.path.basename(args.resume_from_checkpoint)
         # Extract `step_{i}`
         training_difference = os.path.splitext(path)[0]
+        training_difference = training_difference.rstrip('/')
         resumeStep = int(training_difference.replace("step_", ""))
         startingEpoch = resumeStep // dataSize
         resumeStep -= startingEpoch * dataSize
@@ -298,7 +299,7 @@ def trainingLoop(device, args):
 
 def evaluation(device, args):
 
-    evalSet = data.DocIterableDataset(args.test_dataset)
+    evalSet = data.DocIterableDataset(args.test_dataset, args.task)
     dataLoader = data.DataLoader(evalSet, batch_size=args.batch_size)
     classNames = set()
     with open(args.test_dataset, 'r') as fp:
@@ -314,17 +315,16 @@ def evaluation(device, args):
     utils.plotConfusionMatrix(y_test, y_pred, list(classNames), args.plotConfusionFileName)
     
 
-#RuntimeError: Error(s) in loading state_dict for DocTransformerClassifier:
-#	size mismatch for outClasses.weight: copying a param with shape torch.Size([2, 768]) from checkpoint, the shape in current model is torch.Size([3, 768]).
 def classification(device, args):
 
-    evalSet = data.DocIterableDataset(args.test_dataset)
+    evalSet = data.DocIterableDataset(args.test_dataset, args.task)
     dataLoader = data.DataLoader(evalSet, batch_size=args.batch_size)
     
     model = network.setModel(args, device)
     model.load_state_dict(torch.load(os.path.join(args.classification_model_folder, args.classification_model), map_location=torch.device(device)))
     tokenizer = network.loadTokenizer()
     y_pred, y_pred_probs = getPredictionsNoTargets(model, tokenizer, dataLoader, device, args)
-    utils.printClassifications(y_pred, y_pred_probs,args.test_dataset) 
+    modelName = args.classification_model[:-4] #removing the extension
+    utils.printClassifications(y_pred, y_pred_probs,args.test_dataset,modelName) 
     
     

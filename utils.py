@@ -39,7 +39,7 @@ def evaluate(model, tokenizer, dataLoader, device, args, classNames):
 
 
 def printEvalReport(y_test, y_pred, classNames):
-    print(classification_report(y_test, y_pred, target_names=classNames))
+    print(classification_report(y_test, y_pred, target_names=classNames, digits=4))
 
 
 def printConfusionMatrix(y_test, y_pred, classNames):
@@ -75,9 +75,9 @@ def plotConfusionMatrix(y_test, y_pred, classNames, fileName):
     plt.tight_layout(pad=0.3)
     plt.savefig(fileName)
 
-def printClassifications(y_pred, y_pred_probs, testName):
-    outputFile = testName+'.classified'
+def printClassifications(y_pred, y_pred_probs, testName, modelName):
+    outputFile = testName+'.'+modelName+'.classified'
     with open(outputFile, "w") as file:
        for pred, prob in zip(y_pred, y_pred_probs):
-           file.write(str(pred.tolist()) + '\t' + str(prob.tolist()) + '\n')
+           file.write(data.getTextLabel(pred.tolist()) + '\t' + str(prob.tolist()) + '\n')
 

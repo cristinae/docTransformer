@@ -4,7 +4,6 @@ Transformer for classification tasks that operates with document fragments
 
 ## Features
 
-* UPCOMING: pert distribution for building document embeddings
 * UPCOMING: Multi-GPU support using the ```Accelerate``` library
 * Gradient accumulation to train with larger effective batches using the ```Accelerate``` library
 * An input data streaming implementation to allow training with large datasets
@@ -33,7 +32,9 @@ Transformer for classification tasks that operates with document fragments
 
 ```srun -p A100-80GB -t 3-0 --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --eval_steps 10000 --lr 5e-6 -f modelb2a8sentence16A80 -o modelb2a8sentence16A80seed2.bin -b2 -a8 --sentence_batch_size 16 --split_documents True  --seed 5678``` 
 
-```srun -p V100-16GB  --ntasks 1 --gpus-per-task 4 accelerate launch --multi_gpu --num_processes 4 --num_machines 1 docClassifier.py -b1 -a2 -o best_model_multi4gpus.bin```
+```srun -p V100-16GB --ntasks 1 --gpus-per-task 4 accelerate launch --multi_gpu --num_processes 4 --num_machines 1 docClassifier.py -b1 -a2 -o best_model_multi4gpus.bin```
+
+```srun --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --task classification -f modelb2a8sentence2V100 -o modelb2a8sentence2V100seed3_333.bin -b1 --sentence_batch_size 2 --split_documents True --test_dataset ../es/es_meta_part_1.jsonl.unk```
 
 ## Citation
 

@@ -15,8 +15,7 @@ plt.rcParams.update({
 })
 plt.rcParams.update({
   "text.usetex": True,
-#  "font.family": "Helvetica",
-  "font.family": "serif",
+  "font.family": "Helvetica",
   "font.size": 20
 })
 fontTit = {'family': 'sans-serif',
@@ -24,11 +23,10 @@ fontTit = {'family': 'sans-serif',
         'weight': 'heavy',
         'size': 22,
         }
-fontAx = {'family': 'serif',
+fontAx = {'family': 'sans-serif',
         'weight': 'normal',
-        'size': 20,
+        'size': 18,
         }
-
 
 x1 = []
 y1 = []
@@ -41,22 +39,22 @@ y4 = []
 x5 = []
 y5 = []
  
-with open('./accs/modelb2a8fixV100.acc.seed2', 'r') as datafile:
+with open('./accs/modelb2a8fixV100.acc.seed3', 'r') as datafile:
     plotting = csv.reader(datafile, delimiter=',')
     for r in plotting:
         x1.append(int(r[0])/1000)
         y1.append(float(r[1])*100)
-with open('./accs/modelb2a8sentence2V100.acc.seed2', 'r') as datafile:
+with open('./accs/modelb2a8sentence2V100.acc.seed3', 'r') as datafile:
     plotting = csv.reader(datafile, delimiter=',')
     for r in plotting:
         x2.append(int(r[0])/1000)
         y2.append(float(r[1])*100)
-with open('./accs/modelb2a8sentence3V100.acc.seed2', 'r') as datafile:
+with open('./accs/modelb2a8sentence3V100.acc.seed3', 'r') as datafile:
     plotting = csv.reader(datafile, delimiter=',')
     for r in plotting:
         x3.append(int(r[0])/1000)
         y3.append(float(r[1])*100)
-with open('./accs/modelb2a8sentence6A80.acc.seed2', 'r') as datafile:
+with open('./accs/modelb2a8sentence6A80.acc.seed3', 'r') as datafile:
     plotting = csv.reader(datafile, delimiter=',')
     for r in plotting:
         x4.append(int(r[0])/1000)
@@ -70,7 +68,7 @@ with open('./accs/modelb2a8sentence16A80.acc.seed2', 'r') as datafile:
   
 ig, ax = plt.subplots()
 ax.set_ylim(75,96)
-ax.set_xlim(0,2000)
+ax.set_xlim(0,2060)
   
 ax.plot(x1, y1, label = "~1 split", linestyle="-") 
 ax.plot(x2, y2, label = "~2 splits", linestyle="--") 
