@@ -155,6 +155,9 @@ def split_batch(docs, args):
 def classNamesToyData(): 
     return ['Chile', 'España', 'México', 'Mix']
     
+def getClassesLabelVariant():
+    return ['cl', 'es', 'mx', 'mix']
+
 def labelVariantsData(label):
     d = {'cl':0, 'es':1, 'mx':2, 'mix':3}
     return d[label]

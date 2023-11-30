@@ -46,6 +46,7 @@ def printConfusionMatrix(y_test, y_pred, classNames):
     #print(confusion_matrix(y_test, y_pred, labels=classNames))
     print(confusion_matrix(y_test, y_pred))
 
+
 def plot_confusion_matrix(cm, title='Confusion matrix', cmap=plt.cm.Oranges):
     # modifying https://stackoverflow.com/questions/40264763/how-can-i-make-my-confusion-matrix-plot-only-1-decimal-in-python
     plt.figure(figsize=(7,6.4))

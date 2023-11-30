@@ -5,6 +5,8 @@ Transformer for classification tasks that operates with document fragments
 ## Features
 
 * UPCOMING: Multi-GPU support using the ```Accelerate``` library
+* Explainability measures
+  * Currently output salient words in the classification using Integrated Gradients attribution scores with the ```Captum``` library
 * Gradient accumulation to train with larger effective batches using the ```Accelerate``` library
 * An input data streaming implementation to allow training with large datasets
 * Possibility to build document embeddings before classification both during training and classification
@@ -23,6 +25,7 @@ Transformer for classification tasks that operates with document fragments
 * [Python](https://www.python.org) version >= 3.9
 * [PyTorch](http://pytorch.org/) version >= 2.0.1
 * [Accelerate](https://github.com/huggingface/accelerate) version >= 0.21.0
+* [Captum](https://captum.ai/) version 0.6.0
 
 ## Example Usage
 

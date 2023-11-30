@@ -35,8 +35,11 @@ def readCommandLine():
     parser.add_argument("--num_checkpoints", type=int, default=1, help="Number of checkpoints to keep. Default: 1")
 
     #Task (training by default)
-    parser.add_argument("--task", type=str, default='training', help="Task to perform. Options: training, evaluation, classification. Default: training")
-    parser.add_argument("--plotConfusionFileName", type=str, default='confusionTest.png', help="File name for the plot of the confusion matrix when task evaluation is chosen. Default: confusionTest.png")
+    parser.add_argument("--task", type=str, default='training', help="Task to perform. Options: training, evaluation, classification, explanation. Default: training")
+    parser.add_argument("--xai_method", type=str, default='ig', help="Explainability method, currently only Integrated Gradients implemented. Used when --task is set to 'explanation'. Default: ig")
+    parser.add_argument("--xai_elements", type=int, default=100, help="Number of top words per class to be displayed according to its attribution score (Integrated Gradients). Used when --task is set to 'explanation'. Default: 100")
+    parser.add_argument("--xai_lig_batch", type=int, default=10, help="Batch size for the layer integrated method. Used when --task is set to 'explanation'. Default: 10")
+    parser.add_argument("--plot_confusion_fileName", type=str, default='confusionTest.png', help="File name for the plot of the confusion matrix when --task evaluation is chosen. Default: confusionTest.png")
     
     # Data processing
     # Tokenisation
@@ -106,6 +109,8 @@ if __name__ == "__main__":
        trainer.evaluation(device, args)
     elif (args.task == 'classification'):
        trainer.classification(device, args)
+    elif (args.task == 'explanation'):
+       trainer.explanation(device, args)
     else:
        print('Wrong task to perform: ', args.task)
     

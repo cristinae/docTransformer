@@ -5,6 +5,12 @@ from torch import nn, optim
 import torch.nn.functional as F
 import transformers
 import numpy as np
+import string
+
+from captum.attr import IntegratedGradients, LayerConductance, LayerIntegratedGradients, TokenReferenceBase
+from captum.attr import configure_interpretable_embedding_layer, remove_interpretable_embedding_layer
+from collections import Counter
+import heapq
 
 from accelerate import Accelerator
 
@@ -124,7 +130,6 @@ def getPredictions(model, tokenizer, data_loader, device, args):
       _, preds = torch.max(outputs, dim=1)
 
       probs = F.softmax(outputs, dim=1)
-
       predictions.extend(preds)
       prediction_probs.extend(probs)
       real_values.extend(targets)
@@ -133,6 +138,7 @@ def getPredictions(model, tokenizer, data_loader, device, args):
   prediction_probs = torch.stack(prediction_probs).cpu()
   real_values = torch.stack(real_values).cpu()
   return predictions, prediction_probs, real_values
+
 
 
 def getPredictionsNoTargets(model, tokenizer, data_loader, device, args):
@@ -312,7 +318,7 @@ def evaluation(device, args):
     y_pred, y_pred_probs, y_test = getPredictions(model, tokenizer, dataLoader, device, args)
     utils.printEvalReport(y_test, y_pred, classNames)
     utils.printConfusionMatrix(y_test, y_pred, list(classNames))
-    utils.plotConfusionMatrix(y_test, y_pred, list(classNames), args.plotConfusionFileName)
+    utils.plotConfusionMatrix(y_test, y_pred, list(classNames), args.plot_confusion_fileName)
     
 
 def classification(device, args):
@@ -326,5 +332,102 @@ def classification(device, args):
     y_pred, y_pred_probs = getPredictionsNoTargets(model, tokenizer, dataLoader, device, args)
     modelName = args.classification_model[:-4] #removing the extension
     utils.printClassifications(y_pred, y_pred_probs,args.test_dataset,modelName) 
+
+
+def getInput4XAI(model, tokenizer, data_loader, device, args):
+    model = model.eval()
+  
+    docs = []
+    ids = []
+    attmasks = []
+    tgts = []
+
+    with torch.no_grad():
+      for batch in data_loader:
+
+        if (args.split_documents):
+           documents = data.split_batch(batch[0], args)
+        else:
+           documents = batch[0]
+
+        encodings = tokenizer(documents, truncation=args.truncation, padding=args.padding, return_token_type_ids=False, return_tensors='pt')    
+        input_ids = encodings['input_ids'].clone().detach().to(device)
+        attention_mask =  encodings["attention_mask"].clone().detach().to(device)
+        targets = batch[1].to(device)
+#       input_ids = encodings['input_ids'].clone().detach()
+#       attention_mask =  encodings["attention_mask"].clone().detach()
+#       targets = batch[1]
+
+        docs.append(documents)
+        tgts.append(targets)
+        ids.append(input_ids)
+        attmasks.append(attention_mask)
+
+    return docs, tgts, ids, attmasks
+
+
+def explanation(device, args):
+
+    evalSet = data.DocIterableDataset(args.test_dataset, args.task)
+    dataLoader = data.DataLoader(evalSet, batch_size=args.batch_size)
     
+    model = network.setModel(args, device)
+    model.load_state_dict(torch.load(os.path.join(args.classification_model_folder, args.classification_model), map_location=torch.device(device)))
+    tokenizer = network.loadTokenizer()
+    docs, tgts, ids, attmasks = getInput4XAI(model, tokenizer, dataLoader, device, args)
+
+    # prepare captum
+    N = 5    # top-N words to be considered per document 
+    lig = LayerIntegratedGradients(model, model.transformer.embeddings)
+    token_reference = TokenReferenceBase(reference_token_idx=tokenizer.pad_token_id)
+
+    labels = data.getClassesLabelVariant()
+    for label in labels:
+        globals()[f"top_Positive_{label}"] = Counter()
+        globals()[f"top_Negative_{label}"] = Counter() 
     
+    for doc_num, doc_text in enumerate(docs):
+
+        label = data.getTextLabel(tgts[doc_num][0].item())
+        # calculate attributes
+        reference_indices = token_reference.generate_reference(sequence_length=ids[doc_num].size(dim=1), device=device).unsqueeze(0)
+        attr, delta = lig.attribute(inputs=ids[doc_num], baselines=reference_indices, additional_forward_args=(attmasks[doc_num]), return_convergence_delta=True, n_steps=5, internal_batch_size=args.xai_lig_batch, target=tgts[doc_num])
+        # torch.Size([1, 203, 1024])
+        # summarize attributions for each word token in the sequence
+        attr = attr.sum(dim=-1).squeeze(0)
+        attr = attr / torch.norm(attr)
+    
+        # convert the subunit-based output to words     
+        attribXid = dict()
+        for elem, id in zip(attr.cpu().numpy(),ids[doc_num][0].cpu().numpy()):   #what would be the best practice for this?
+            attribXid[id]=elem        
+        document = doc_text[0].replace('', '<NS>')) #this should not happen in the splitted setting
+        document = document.translate(str.maketrans('', '', string.punctuation))
+        document = document.translate(str.maketrans('', '','”“¿'))
+        final_attributions = dict()
+        for word in document.split():
+            word_ids = tokenizer.encode(word, add_special_tokens=False)
+            attribution = 0
+            # the attribution of a word is the sum ob the attribution for its subunits
+            for id in word_ids:
+                if not id in attribXid:
+                   pass
+                   #attribution = attribution + 0 #stupid line to make it explicit
+                else:
+                   attribution = attribution + attribXid[id]
+            final_attributions[word]=attribution
+        globals()[f'top_Positive_{label}'].update(heapq.nlargest(N, final_attributions, key=lambda k: final_attributions[k]))
+        globals()[f'top_Negative_{label}'].update(heapq.nsmallest(N, final_attributions, key=lambda k: final_attributions[k]))
+    
+    print('Top-',args.xai_elements, ' words according to the IG attribution score')
+    for label in labels:
+        print(label, end=",")
+    print()
+    for elem in range(0,args.xai_elements):
+        for label in labels:
+            if (len(globals()[f"top_Positive_{label}"].most_common(args.xai_elements))>elem):
+                print(globals()[f"top_Positive_{label}"].most_common(args.xai_elements)[elem], end=",")
+            else:
+                print("('--',0)", end=",")
+        print()
+
