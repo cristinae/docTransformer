@@ -7,10 +7,9 @@ import transformers
 import numpy as np
 import string
 
-from captum.attr import IntegratedGradients, LayerConductance, LayerIntegratedGradients, TokenReferenceBase
-from captum.attr import configure_interpretable_embedding_layer, remove_interpretable_embedding_layer
+from captum.attr import IntegratedGradients, LayerIntegratedGradients, TokenReferenceBase
+from scipy.signal import argrelextrema
 from collections import Counter
-import heapq
 
 from accelerate import Accelerator
 
@@ -377,7 +376,6 @@ def explanation(device, args):
     docs, tgts, ids, attmasks = getInput4XAI(model, tokenizer, dataLoader, device, args)
 
     # prepare captum
-    N = 5    # top-N words to be considered per document 
     lig = LayerIntegratedGradients(model, model.transformer.embeddings)
     token_reference = TokenReferenceBase(reference_token_idx=tokenizer.pad_token_id)
 
@@ -391,35 +389,57 @@ def explanation(device, args):
         label = data.getTextLabel(tgts[doc_num][0].item())
         # calculate attributes
         reference_indices = token_reference.generate_reference(sequence_length=ids[doc_num].size(dim=1), device=device).unsqueeze(0)
-        attr, delta = lig.attribute(inputs=ids[doc_num], baselines=reference_indices, additional_forward_args=(attmasks[doc_num]), return_convergence_delta=True, n_steps=5, internal_batch_size=args.xai_lig_batch, target=tgts[doc_num])
+        attr, delta = lig.attribute(inputs=ids[doc_num], baselines=reference_indices, additional_forward_args=(attmasks[doc_num]), return_convergence_delta=True, n_steps=50, internal_batch_size=args.xai_lig_batch, target=tgts[doc_num])
         # torch.Size([1, 203, 1024])
         # summarize attributions for each word token in the sequence
         attr = attr.sum(dim=-1).squeeze(0)
         attr = attr / torch.norm(attr)
     
-        # convert the subunit-based output to words     
+        # convert the subunit-based output to words and afterwards build phrases 
         attribXid = dict()
-        for elem, id in zip(attr.cpu().numpy(),ids[doc_num][0].cpu().numpy()):   #what would be the best practice for this?
+        if (device=='cpu'):
+            attribs=attr[doc_num].numpy() #works, but why?
+        elif (device=='cuda'):
+            attribs=attr.cpu().numpy()
+        else:
+            attribs=attr.cpu().numpy() #waiting to see tups
+
+        for elem, id in zip(attribs,ids[doc_num][0].cpu().numpy()):   #what would be the best practice for this?
             attribXid[id]=elem        
-        document = doc_text[0].replace('', '<NS>')) #this should not happen in the splitted setting
+        document = doc_text[0].replace('<NS>','') #this should not happen in the splitted setting
         document = document.translate(str.maketrans('', '', string.punctuation))
         document = document.translate(str.maketrans('', '','”“¿'))
-        final_attributions = dict()
-        for word in document.split():
+        final_attribs = []
+        words_doc = document.split()
+        for word in words_doc:
             word_ids = tokenizer.encode(word, add_special_tokens=False)
             attribution = 0
-            # the attribution of a word is the sum ob the attribution for its subunits
+            # the attribution of a word is the sum of the attribution for its subunits
             for id in word_ids:
-                if not id in attribXid:
-                   pass
-                   #attribution = attribution + 0 #stupid line to make it explicit
-                else:
+                if id in attribXid:
                    attribution = attribution + attribXid[id]
-            final_attributions[word]=attribution
-        globals()[f'top_Positive_{label}'].update(heapq.nlargest(N, final_attributions, key=lambda k: final_attributions[k]))
-        globals()[f'top_Negative_{label}'].update(heapq.nsmallest(N, final_attributions, key=lambda k: final_attributions[k]))
+            final_attribs.append(attribution)
+        tmp = np.array(final_attribs, dtype='float32')
+        # we look for local maxima and all the points around that are within the threshold. 
+        # That is a phrase. We limit the length of a phrase to 5: head+-2
+        threshold_attr = np.percentile(tmp[tmp!=0], args.xai_threshold_percentile)
+        local_max = argrelextrema(tmp, np.greater)
+        for point in local_max[0]:
+            if (final_attribs[point] > threshold_attr):
+                candidate = words_doc[point]
+                #candidate = words_doc[point]+'_head'
+                if (len(final_attribs) > point+1 and final_attribs[point+1] > threshold_attr): 
+                    candidate = candidate + ' ' + words_doc[point+1]   
+                    if (len(final_attribs) > point+2 and final_attribs[point+2] > threshold_attr): 
+                        candidate = candidate + ' ' + words_doc[point+2]   
+                if (point > 0 and final_attribs[point-1] > threshold_attr): 
+                    candidate = words_doc[point-1] + ' ' + candidate   
+                    if (point > 1 and final_attribs[point-2] > threshold_attr): 
+                        candidate = words_doc[point-2] + ' ' + candidate   
+                globals()[f'top_Positive_{label}'].update([candidate])
     
-    print('Top-',args.xai_elements, ' words according to the IG attribution score')
+                
+    print('Top-',args.xai_elements, ' phrases according to the IG attribution score')
     for label in labels:
         print(label, end=",")
     print()
