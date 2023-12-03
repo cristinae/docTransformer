@@ -39,7 +39,7 @@ def readCommandLine():
     parser.add_argument("--xai_method", type=str, default='ig', help="Explainability method, currently only Layer Integrated Gradients implemented. Used when --task is set to 'explanation'. Default: ig")
     parser.add_argument("--xai_elements", type=int, default=100, help="Number of top words per class to be displayed according to its attribution score (Integrated Gradients). Used when --task is set to 'explanation'. Default: 100")
     parser.add_argument("--xai_lig_batch", type=int, default=10, help="Batch size for the layer integrated method. Used when --task is set to 'explanation'. Default: 10")
-    parser.add_argument("--xai_threshold_percentile", type=int, default=85, help="Top percentage of words per document to be considered relevant. Used when --task is set to 'explanation'. Default: 85")
+    parser.add_argument("--xai_threshold_percentile", type=int, default=95, help="Top percentage of words per document to be considered relevant. Used when --task is set to 'explanation'. Default: 95")
     parser.add_argument("--plot_confusion_fileName", type=str, default='confusionTest.png', help="File name for the plot of the confusion matrix when --task evaluation is chosen. Default: confusionTest.png")
     
     # Data processing

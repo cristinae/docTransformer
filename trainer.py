@@ -419,22 +419,25 @@ def explanation(device, args):
                 if id in attribXid:
                    attribution = attribution + attribXid[id]
             final_attribs.append(attribution)
+            #print(word,attribution)
         tmp = np.array(final_attribs, dtype='float32')
         # we look for local maxima and all the points around that are within the threshold. 
         # That is a phrase. We limit the length of a phrase to 5: head+-2
         threshold_attr = np.percentile(tmp[tmp!=0], args.xai_threshold_percentile)
+        threshold_attr_phrase = np.percentile(tmp[tmp!=0], args.xai_threshold_percentile-10)
+        #print(threshold_attr, "\n\n\n")
         local_max = argrelextrema(tmp, np.greater)
         for point in local_max[0]:
             if (final_attribs[point] > threshold_attr):
                 candidate = words_doc[point]
                 #candidate = words_doc[point]+'_head'
-                if (len(final_attribs) > point+1 and final_attribs[point+1] > threshold_attr): 
+                if (len(final_attribs) > point+1 and final_attribs[point+1] > threshold_attr_phrase): 
                     candidate = candidate + ' ' + words_doc[point+1]   
-                    if (len(final_attribs) > point+2 and final_attribs[point+2] > threshold_attr): 
+                    if (len(final_attribs) > point+2 and final_attribs[point+2] > threshold_attr_phrase): 
                         candidate = candidate + ' ' + words_doc[point+2]   
-                if (point > 0 and final_attribs[point-1] > threshold_attr): 
+                if (point > 0 and final_attribs[point-1] > threshold_attr_phrase): 
                     candidate = words_doc[point-1] + ' ' + candidate   
-                    if (point > 1 and final_attribs[point-2] > threshold_attr): 
+                    if (point > 1 and final_attribs[point-2] > threshold_attr_phrase): 
                         candidate = words_doc[point-2] + ' ' + candidate   
                 globals()[f'top_Positive_{label}'].update([candidate])
     
