@@ -31,11 +31,21 @@ Transformer for classification tasks that operates with document fragments
 
 ### Slurm 
 
+#### Training
+
 ```srun --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --gradient_accumulation_steps 2```
 
 ```srun -p A100-80GB -t 3-0 --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --eval_steps 10000 --lr 5e-6 -f modelb2a8sentence16A80 -o modelb2a8sentence16A80seed2.bin -b2 -a8 --sentence_batch_size 16 --split_documents True  --seed 5678``` 
 
+#### Evaluation
+
+srun -p RTXA6000  --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --task evaluation -f modelb2a8sentence2V100 -o modelb2a8sentence2V100seed3_333.bin -b2 -a8 --sentence_batch_size 2 --split_documents True --test_dataset data/multivariant3all.test --plotConfusionFileName modelSplit2Seed3test.png
+
+#### Classification
+
 ```srun --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --task classification -f modelb2a8sentence2V100 -o modelb2a8sentence2V100seed3_333.bin -b1 --sentence_batch_size 2 --split_documents True --test_dataset ../es/es_meta_part_1.jsonl.unk```
+
+#### Explanation
 
 ```srun -p RTXA6000  --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --task explanation -t data/testExample.mx -f modelb2a8fixV100 -o modelb2a8fixV100seed3_3.bin -b1 --split_documents False  --xai_threshold_percentile 90```
 
