@@ -39,7 +39,7 @@ Transformer for classification tasks that operates with document fragments
 
 #### Evaluation
 
-srun -p RTXA6000  --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --task evaluation -f modelb2a8sentence2V100 -o modelb2a8sentence2V100seed3_333.bin -b2 -a8 --sentence_batch_size 2 --split_documents True --test_dataset data/multivariant3all.test --plotConfusionFileName modelSplit2Seed3test.png
+```srun -p RTXA6000  --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --task evaluation -f modelb2a8sentence2V100 -o modelb2a8sentence2V100seed3_333.bin -b2 -a8 --sentence_batch_size 2 --split_documents True --test_dataset data/multivariant3all.test --plotConfusionFileName modelSplit2Seed3test.png```
 
 #### Classification
 
