@@ -26,7 +26,7 @@ plt.rcParams.update({
 plt.rcParams.update({
   "text.usetex": True,
   "font.family": "Helvetica",
-  "font.size": 20
+  "font.size": 22
 })
 fontTit = {'family': 'sans-serif',
         'color':  'black',
@@ -35,7 +35,7 @@ fontTit = {'family': 'sans-serif',
         }
 fontAx = {'family': 'sans-serif',
         'weight': 'normal',
-        'size': 18,
+        'size': 20,
         }
 
 
@@ -62,6 +62,30 @@ def get_parser():
 
     return parser
 
+
+def createHistogramHor(countsW, countsNS, INfile):
+
+    fig, ax = plt.subplots(2, 1, sharex=True, figsize=(8,6))
+    fig.subplots_adjust(0.13,0.12,0.99,0.99,0,0)
+    plt.xlabel('\# Documents')
+ 
+    n, bins, patches = ax[0].hist(x=countsW, bins=40, color='#964613',
+                            alpha=0.7, rwidth=0.85, orientation="horizontal")
+    ax[0].set_ylabel('Words')
+    n, bins, patches = ax[1].hist(x=countsNS, bins=40, color='#801515',
+                            alpha=0.7, rwidth=0.85, orientation="horizontal")
+    ax[1].set_ylabel('Segments ($<$NS$>$)',labelpad=11)
+    plt.xlim(xmin=0, xmax=452000)
+
+    ax[0].grid(axis='y', alpha=0.7)
+    ax[1].grid(axis='y', alpha=0.7)
+    ax[0].set_ylim(ymin=0, ymax=3100)
+    ax[1].set_ylim(ymin=0, ymax=143)
+    ax[1].yaxis.set_ticks(np.arange(0, 140, 25))
+
+    plt.ticklabel_format(axis='x', style='sci', scilimits=(0,1000))
+    #plt.tight_layout(pad=0.3)
+    plt.savefig(INfile+'.all.png')
 
 def createHistogram(counts, INfile):
     plt.figure(figsize=(8,5.5))
@@ -91,7 +115,8 @@ def main(args=None):
  
     INfile = args.iFile
     OUTfile = INfile+'.count'
-    counts = []
+    countsWords = []
+    countsSeps = []
     with open(INfile, 'r') as file, open(OUTfile, 'w') as output:
         while True:
           line = file.readline()
@@ -108,9 +133,10 @@ def main(args=None):
           words = tokens - seps
           output.write(str(words)+" "+str(seps)+"\n")
           if (args.histogram==1):
-              counts.append(seps)
+              countsWords.append(words)
+              countsSeps.append(seps)
         if (args.histogram==1):
-           createHistogram(counts, INfile)   
+           createHistogramHor(countsWords, countsSeps, INfile)   
 
         
         
