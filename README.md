@@ -27,6 +27,7 @@ Transformer for classification tasks that operates with document fragments
 * [Accelerate](https://github.com/huggingface/accelerate) version >= 0.21.0
 * [Captum](https://captum.ai/) version 0.6.0
 
+
 ## Example Usage
 
 ### Slurm 
@@ -39,7 +40,7 @@ Transformer for classification tasks that operates with document fragments
 
 #### Evaluation
 
-```srun -p RTXA6000  --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --task evaluation -f modelb2a8sentence2V100 -o modelb2a8sentence2V100seed3_333.bin -b2 -a8 --sentence_batch_size 2 --split_documents True --test_dataset data/multivariant3all.test --plotConfusionFileName modelSplit2Seed3test.png```
+```srun -p RTXA6000  --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --task evaluation -f modelb2a8sentence2V100 -o modelb2a8sentence2V100seed3_333.bin -b2 --sentence_batch_size 2 --split_documents True --test_dataset data/multivariant3all.test --plotConfusionFileName modelSplit2Seed3test.png```
 
 #### Classification
 
@@ -48,6 +49,13 @@ Transformer for classification tasks that operates with document fragments
 #### Explanation
 
 ```srun -p RTXA6000  --ntasks 1 --gpus-per-task 1 python -u docClassifier.py --task explanation -t data/testExample.mx -f modelb2a8fixV100 -o modelb2a8fixV100seed3_3.bin -b1 --split_documents False  --xai_threshold_percentile 90```
+
+
+## Further Usage
+
+In order to use it for your own classification task with full functionalities:
+* Prepare your training data with the class in the 2nd column and the text to classify in the 5th column. Otherwise, modify the ```line_mapper``` function in ```data.py```
+* Adapt the classification labels in the last functions of  ```data.py```
 
 
 ## Citation
@@ -59,14 +67,17 @@ Version v1.0.1 without the document level functionality (```--split_documents Fa
 @inproceedings{espana-bonet-2023-multilingual,
     title = "Multilingual Coarse Political Stance Classification of Media. The Editorial Line of a ChatGPT and Bard Newspaper",
     author = "Espa{\~n}a-Bonet, Cristina",
+    editor = "Bouamor, Houda  and
+      Pino, Juan  and
+      Bali, Kalika",
     booktitle = "Findings of the 2023 Conference on Empirical Methods in Natural Language Processing",
     month = dec,
     year = "2023",
     address = "Singapore",
     publisher = "Association for Computational Linguistics",
-    url = "https://aclanthology.org/",
-    pages = "--"
+    url = "https://aclanthology.org/2023.findings-emnlp.787",
+    doi = "10.18653/v1/2023.findings-emnlp.787",
+    pages = "11757--11777"
 }
 ```
- 
 

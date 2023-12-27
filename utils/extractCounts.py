@@ -71,9 +71,13 @@ def createHistogramHor(countsW, countsNS, INfile):
  
     n, bins, patches = ax[0].hist(x=countsW, bins=40, color='#964613',
                             alpha=0.7, rwidth=0.85, orientation="horizontal")
+    ax[0].axhline(np.array(countsW).mean(), color='blue', linestyle='dashed', linewidth=2)
+    print(np.array(countsW).mean())
     ax[0].set_ylabel('Words')
     n, bins, patches = ax[1].hist(x=countsNS, bins=40, color='#801515',
                             alpha=0.7, rwidth=0.85, orientation="horizontal")
+    ax[1].axhline(np.array(countsNS).mean(), color='blue', linestyle='dashed', linewidth=2)
+    print(np.array(countsNS).mean())
     ax[1].set_ylabel('Segments ($<$NS$>$)',labelpad=11)
     plt.xlim(xmin=0, xmax=452000)
 
