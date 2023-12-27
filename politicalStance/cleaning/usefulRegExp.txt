@@ -1,0 +1,210 @@
+###############################################################################
+# ENGLISH DATA
+
+The economist
+sed -i 's/ <NS> This article appeared in.*//' newspapers.left.en
+sed -i 's/ <NS> Help and contact us .*//' newspapers.left.en
+sed -i 's/ for The Economist. <NS> The Economist today.*//' newspapers.left.en
+
+https://www.cbsnews.com
+sed -i 's/ <NS> First published on .*//' newspapers.left.en
+sed -i '/CBS Interactive/d' newspapers.left.en
+
+https://www.huffpost.com
+sed -i  's/Part of HuffPost News. ©2021 BuzzFeed, Inc. All rights reserved. <NS> //' newspapers.left.en
+sed -i  's/ <NS> Wake up to the day.*//' newspapers.left.en
+sed -i 's/ <NS> Deputy Managing Editor, Breaking News, HuffPost//' newspapers.left.en
+sed -i 's/ <NS> The Funniest Tweets From Parents This Week //' newspapers.left.nodups.e
+
+cut -f1,2 newspapers.left.en > part1
+cut -f3- newspapers.left.en > part2
+sed -i 's/Part of HuffPost .* ©202. BuzzFeed, Inc. All rights reserved. <NS> //' part2
+sed -i  's/By <NS> Deputy Managing Editor, Breaking News, HuffPost <NS> //' part2 
+sed -i 's/This article exists as part of the online archive for HuffPost Canada, which closed in 2021. <NS> //' part2 
+sed -i 's/This article exists as part of the online archive for HuffPost Australia, which closed in 2021. <NS> //' part2
+sed -i 's/This article exists as part of the online archive for HuffPost India, which closed in 2020. Some features are no longer enabled. If you have questions or concerns about this article, please contact indiasupport@huffpost.com. <NS> By <NS> //' part2 
+sed -i 's/This article exists as part of the .*//' part2
+sed -i 's/Click to copy <NS> Click to copy <NS> Related topics <NS> U.S. News <NS> //' part2 
+sed -i 's/<NS> IE 11 is not supported. For an optimal experience visit our site on another browser. <NS> Nightly News <NS> Mavericks with Ari Melber <NS> Follow think <NS> More from NBC <NS> Careers <NS> Terms of Service <NS> Advertise <NS> Reddit <NS> //' part2 
+
+https://www.newyorker.com
+sed -i 's/ <NS> Buy Covers and Cartoons .*//' newspapers.left.en
+sed -i 's/ <NS> This Week’s Issue .*//' newspapers.left.en
+sed -i '/There is no abstract available for this article, but /d' newspapers.left.en
+sed -i 's/ <NS> Published in the print edition .*//' newspapers.left.en
+sed -i  's/ <NS> What our staff is reading, watching, .*//' newspapers.left.en  
+sed -i 's/ <NS> Sign up for notifications.*//' newspapers.left.en
+sed -i 's/ <NS> Sign up for our daily*//' newspapers.left.en
+sed -i  's/ ♦//' newspapers.left.en 
+sed -i  's/ <NS> Sign up and get .*//' newspapers.left.en
+
+nbcnews
+sed -i 's/ <NS> Want more tips like these? .*//' newspapers.left.nodups.en
+
+apnews
+sed -i 's/Click to copy <NS> Click to copy <NS> Related topics <NS> Election 20.. <NS> Campaigns <NS> //' newspapers.left.en
+sed -i 's/U.S. News <NS> Sports <NS> Oddities <NS> Health <NS> Photography <NS> //' newspapers.left.nodups.en
+sed -i 's/Click to copy <NS> Click to copy <NS> Related topics <NS> //' newspapers.left.nodups.en
+sed -i 's/<NS> Press release content from .* The AP news staff was not involved in its creation. //' newspapers.left.nodups.en
+
+usatoday
+sed -i 's/ <NS> Already have a print subscription? .*//' newspapers.left.nodups.en 
+
+https://www.motherjones.com/
+sed -i 's/ <NS> Looking for news you can trust?.*//' newspapers.left.nodups.en
+sed -i 's/Share on Facebook <NS> Comments <NS> //' newspapers.left.nodups.en 
+
+https://www.politico.com
+sed -i 's/ <NS> Missing out on the latest .*//' newspapers.left.en
+
+https://www.vox.com
+sed -i 's/ <NS> Get our essential policy newsletter delivered Fridays.*//' newspapers.left.en
+sed -i 's/ <NS> Understand how policy impacts people. .*//' newspapers.left.nodups.en 
+ 
+www.slate.com
+sed -i 's/ <NS> Powered by Livefyre .*//' newspapers.left.nodups.en
+
+https://www.buzzfeednews.com
+sed -i 's/<NS> Topics In This Article .*//' newspapers.left.nodups.en
+
+https://www.washingtonpost.com
+sed -i 's/ <NS> Subscriber sign in .*//' newspapers.left.nodups.en
+sed -i 's/ <NS> View more offers.*//' newspapers.left.nodups.en
+sed -i 's/ <NS> Get one year for $29 <NS> Username .* LinkedIn <NS> Comments <NS> Link to homepage <NS>//' newspapers.left.nodups.en
+sed -i 's/Get one year for $29 <NS> Username .* LinkedIn <NS> Comments <NS> Link to homepage <NS> //' newspapers.left.nodups.e
+sed -i 's/ <NS> Username .* LinkedIn <NS> Comments <NS>//' newspapers.left.nodups.en 
+
+insider
+sed -i 's/ <NS> Loading Something is loading. <NS> V.*//' newspapers.left.nodups.en
+
+theintercertp
+sed -i 's/ <NS> Become a Member .*//' newspapers.left.nodups.en
+
+cnn
+sed -i 's/ <NS> Click Here to try .*//' newspapers.left.nodups.en
+sed -i 's/Languages --------- Korean Arabic Japanese Spanish Turkish <NS> //' newspapers.left.nodups.en
+
+npr
+sed -i 's/ <NS> Copyright ©.*//' newspapers.left.nodups.en
+
+all
+sed -i '/ <NS> Read more <NS> /d' newspapers.left.nodups.en	
+sed -i 's/ <NS> Read more .*//' newspapers.left.nodups.en
+
+foxnews
+sed -i 's/| Fox News .*data provided by Refinitiv Lipper. <NS> /<NS> /' newspapers.right.nodups.en
+sed -i 's/This material .*data provided by Refinitiv Lipper. <NS>//' newspapers.right.nodups.en
+sed -i 's/ <NS> Get all the stories you .*//' newspapers.right.nodups.en
+sed -i 's/ <NS> U.S. <NS> Mil.*//' newspapers.right.nodups.en
+sed -i 's/<NS> By | Fox News <NS> Comments //' newspapers.right.nodups.en
+
+https://www.nationalreview.com/
+sed -i 's/ <NS> Politics happens.*//' newspapers.right.nodups.en 
+sed -i 's/ <NS> Share on Facebook  <NS> Email this article.*//' newspapers.right.nodups.en
+
+https://www.theamericanconservative.com
+sed -i 's/ <NS> Sign up to get.*//' newspapers.right.nodups.en
+
+https://www.theepochtimes.com/
+sed -i 's/ <NS> We use cookies to understand.*//' newspapers.right.nodups.en
+sed -i 's/ <NS> Featured Channels .*//' newspapers.right.nodups.en
+
+https://reason.com
+sed -i 's/<NS> Follow this story and more at.*//' newspapers.right.nodups.en 
+sed -i 's/ <NS> Show Comments.*//' newspapers.right.nodups.en
+sed -i 's/ <NS> Webathon .*//' newspapers.right.nodups.en
+sed -i 's/ <NS> NEXT: .*//' newspapers.right.nodups.en
+
+https://www.washingtontimes.com
+sed -i 's/ <NS> Please read our comment policy before commenting.*//' newspapers.right.nodups.en
+
+https://www.dailywire.com/
+sed -i 's/ <NS> The Daily Wire is.*//' newspapers.right.nodups.en
+
+https://dailycaller.com
+sed -i 's/ <NS> Content created by The Daily Caller .*//' newspapers.right.nodups.en
+
+https://amgreatness.com
+sed -i 's/ <NS> Share on <NS> .*//' newspapers.right.nodups.en
+	
+https://spectator.org/
+sed -i 's/\.\.\.Read More <NS>.*//' newspapers.right.nodups.en
+sed -i 's/Submissions <NS> Submissions <NS> .* Register <NS>//' newspapers.right.nodups.en
+
+https://www.wnd.com/
+https://www.thegatewaypundit.com
+sed -i 's/ <NS> . All fields are required.*//' newspapers.right.nodups.en
+
+https://freebeacon.com/
+sed -i 's/ <NS> Next Article .*//' newspapers.right.nodups.en
+sed -i 's/Sponsored <NS> Democrats <NS> Compromise Hard To Come By in Historic Supreme Court Abortion Showdown <NS> //' newspapers.right.nodups.en 
+sed -i 's/Sponsored <NS> Democrats <NS> //' newspapers.right.nodups.en
+	
+all
+sed -i 's/<NS> The Associated Press contributed to this report.*//' newspapers.right.en
+sed -i 's/ <NS> Careers <NS> Adv.*//' newspapers.right.nodups.en
+
+
+
+###############################################################################
+# GERMAN DATA
+
+sed -i 's/ <NS> E-Mail.*$//' newspapers.left.de
+sed -i 's/ <NS> Einmal zahlen.*$//' newspapers.left.de 
+sed -i 's/ <NS> Artikel teilen.*$//' newspapers.left.de
+sed -i 's/ <NS> taz. die tageszeitung.*$//' newspapers.left.de 
+sed -i 's/ <NS> Nachdruckrechte.*$//' newspapers.left.de
+sed -i 's/ <NS> © SZ.de.*$//' newspapers.left.de
+sed -i 's/ <NS> nd Journalismus von links .*$//' newspapers.left.de
+sed -i 's/ <NS> Zum Weiterlesen gibt es folgende.*$//' newspapers.left.de
+sed -i 's/ <NS> Anzeige <NS> Wenn dir der.*$//' newspapers.left.de
+sed -i 's/ <NS> Ihr taz zahl ich-Team <NS>.*$//' newspapers.left.de
+sed -i 's/ <NS> vorheriger artikel.*$//' newspapers.left.de
+sed -i 's/ <NS> nd ohne Papier?.*$//' newspapers.left.de
+sed -i 's/ <NS> Bestens informiert mit SZ Plus.*$//'
+
+
+sed -i  '/Dieser Beitrag ist gesperrt und nur für Onlineabonnenten lesbar/d' newspapers.left.de
+
+#per coses que estan a l'inici
+cut -d'     ' -f3- newspapers.left.de  > neD
+cut -d'     ' -f-2 newspapers.left.de  > neE
+sed -i  's/^.*Umwelt <NS> Anzeige <NS>//' neD
+sed -i  's/^.*Deutschland <NS> Anzeige <NS>//' neD
+sed -i  's/^.*Wirtschaft <NS> Anzeige <NS>//' neD
+sed -i  's/^.*Bücher <NS> Anzeige <NS>//' neD
+sed -i  's/^.*NS> mehr <NS> //' neD
+sed -i  's/^.*<NS> Aus: Ausgabe vom //' neD
+sed -i  's/ <NS> © SZ v.*$//' neD
+sed -i  's/^.*<NS> Anhören <NS> Teilen <NS> Drucken <NS> //' neD
+sed -i  's/ <NS> Teilen <NS> Drucken <NS> Zur SZ-Startseite <NS>.*$//' neD
+
+
+sed -i  's/ <NS> Artikel auf einer Seite lesen <NS>.*$//' newspapers.right.de
+sed -i  's/ <NS> Zum Stellenmarkt <NS>.*$//' newspapers.right.de
+sed -i  's/ <NS> Hier können Sie unsere WELT-Podcasts hören.*$//' newspapers.right.de
+sed -i  's/ <NS> Datenschutz <NS>.*$//' newspapers.right.de
+sed -i  's/ <NS> Quelle: .*$//' newspapers.right.de
+sed -i  's/ <NS> Veröffentlicht\/Aktualisiert: .*$//' newspapers.right.de
+sed -i  's/ <NS> Mehr aus dem Web <NS>.*$//' newspapers.right.de
+sed -i  's/html     .*<NS> Online Spiele <NS> /html /' newspapers.right.de
+sed -i  's/<NS> Mehr News .*//' newspapers.right.de
+sed -i  's/ <NS> Lesen Sie auch <NS>.*//' newspapers.right.de
+sed -i  's/ <NS> Zur Startseite.*//' newspapers.right.de
+sed -i  's/ <NS> Mehr zum Thema <NS>.*//' newspapers.right.de
+sed -i  's/ <NS> Kommentare anzeigen.*//' newspapers.right.de
+sed -i 's/html.* <NS> .......... - ..:.. Uhr <NS> //' newspapers.right.de
+sed -i 's/ <NS> BILD Gutscheine .*//' newspapers.right.de
+
+
+sed -i 's/<NS> Kommentar hinzufügen .*//' full.paz.right.de
+sed -i 's/<NS> Hat Ihnen dieser Artikel gefallen? .*//' full.paz.right.de
+
+sed -i '/   Die WELT als ePaper: Die vollständige Ausgabe steht Ihnen bereits am Vorabend zur Verfügung – so sind Sie immer hochaktuell informiert. Weitere Informationen: http:\/\/epaper.welt.de$/d' newspapers.right.de
+sed -i  '/ <NS> weiter  <NS> /d' newspapers.right.de
+
+sed -i  's/ <NS> An dieser Stelle findest du Inhalte aus YouTube <NS>.*$//' newspapers.right.de
+sed -i 's/Um diesen Artikel oder andere Inhalte über soziale Netzwerke zu teilen, brauchen wir deine Zustimmung für diesen Zweck der Datenverarbeitung <NS> Schließen <NS> veröffentlicht am .......... - ..:.. Uhr <NS> //' newspapers.right.de
+sed -i 's/Um diesen Artikel.* veröffentlicht am .......... - ..:.. Uhr <NS> //' newspapers.right.de
+
+
