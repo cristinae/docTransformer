@@ -60,11 +60,26 @@ In order to use it for your own classification task with full functionalities:
 
 ## Citation
 
-Version v1.0.1 without the document level functionality (```--split_documents False```) has been used in
-
+Please, use the following bibtex entries when citing this research work
 
 ```
-@inproceedings{espana-bonet-2023-multilingual,
+@InProceedings{espana-bonet-barron-cedeno-2024,
+    title = "Elote, Choclo and Mazorca: on the Varieties of Spanish",
+    author = "Espa{\~n}a-Bonet, Cristina  and  Barr{\'o}n-Cede{\~n}o, Alberto",
+    booktitle = "Proceedings of the 2024 Annual Conference of the North American Chapter of the Association for Computational Linguistics",
+    month = jun,
+    year = "2024",
+    address = "Mexico City, Mexico",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/",
+    pages = "--"
+}
+```
+
+Version v1.0.1 without the document level functionality (```--split_documents False```) has been used in
+
+```
+@InProceedings{espana-bonet-2023-multilingual,
     title = "Multilingual Coarse Political Stance Classification of Media. The Editorial Line of a ChatGPT and Bard Newspaper",
     author = "Espa{\~n}a-Bonet, Cristina",
     editor = "Bouamor, Houda  and
