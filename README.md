@@ -63,16 +63,20 @@ In order to use it for your own classification task with full functionalities:
 Please, use the following bibtex entries when citing this research work
 
 ```
-@InProceedings{espana-bonet-barron-cedeno-2024,
-    title = "Elote, Choclo and Mazorca: on the Varieties of Spanish",
-    author = "Espa{\~n}a-Bonet, Cristina  and  Barr{\'o}n-Cede{\~n}o, Alberto",
-    booktitle = "Proceedings of the 2024 Annual Conference of the North American Chapter of the Association for Computational Linguistics",
+@inproceedings{espana-bonet-barron-cedeno-2024-elote,
+    title = "Elote, Choclo and Mazorca: on the Varieties of {S}panish",
+    author = "Espa{\~n}a-Bonet, Cristina  and
+      Barr{\'o}n-Cede{\~n}o, Alberto",
+    editor = "Duh, Kevin  and
+      Gomez, Helena  and
+      Bethard, Steven",
+    booktitle = "Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)",
     month = jun,
     year = "2024",
     address = "Mexico City, Mexico",
     publisher = "Association for Computational Linguistics",
-    url = "https://aclanthology.org/",
-    pages = "--"
+    url = "https://aclanthology.org/2024.naacl-long.204",
+    pages = "3689--3711"
 }
 ```
 
@@ -80,7 +84,7 @@ Version v1.0.1 without the document level functionality (```--split_documents Fa
 
 ```
 @InProceedings{espana-bonet-2023-multilingual,
-    title = "Multilingual Coarse Political Stance Classification of Media. The Editorial Line of a ChatGPT and Bard Newspaper",
+    title = "Multilingual Coarse Political Stance Classification of Media. The Editorial Line of a {C}hat{GPT} and {B}ard Newspaper",
     author = "Espa{\~n}a-Bonet, Cristina",
     editor = "Bouamor, Houda  and
       Pino, Juan  and
